@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Agrumeto VR - Test Pilota</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  </head>
+  <body>
+    <a-scene>
+      <a-assets>
+        <img id="A1" src="assets/a1.jpg">
+        <img id="A2" src="assets/a2.jpg">
+        <img id="A3" src="assets/a3.jpg">
+        <img id="A4" src="assets/a4.jpg">
+        <img id="A5" src="assets/a5.jpg">
+        <img id="A6" src="assets/a6.jpg">
+        <img id="A7" src="assets/a7.jpg">
+        <img id="A8" src="assets/a8.jpg">
+        
+        <img id="B1" src="assets/b1.jpg">
+        <img id="B2" src="assets/b2.jpg">
+        <img id="B3" src="assets/b3.jpg">
+      </a-assets>
+
+      <a-sky id="sfondo" src="#A1" rotation="0 0 0"></a-sky>
+
+      <a-entity id="gruppo-hotspot"></a-entity>
+
+      <a-entity camera look-controls>
+        <a-cursor id="cursor" color="#ffeb3b" scale="1 1 1"></a-cursor>
+      </a-entity>
+    </a-scene>
+
+    <script>
+      // 1. Legge in quale punto si trova l'utente (es: index.html?p=A2)
+      // Se non specificato, parte in automatico da A1 (l'inizio)
+      const urlParams = new URLSearchParams(window.location.search);
+      let puntoCorrente = urlParams.get('p') || 'A1';
+      
+      // Imposta la foto 360 corretta
+      document.getElementById('sfondo').setAttribute('src', '#' + puntoCorrente);
+
+      // Estraiamo la lettera del corridoio (A o B) e il numero del passo (1-8)
+      let corridoio = puntoCorrente.charAt(0);
+      let passo = parseInt(puntoCorrente.substring(1));
+
+      const contenitore = document.getElementById('gruppo-hotspot');
+
+      // FUNZIONE PER CREARE UN PULSANTE NELLO SPAZIO 3D
+      function creaFreccia(direzione, destinazione, posX, posZ, colore) {
+        let box = document.createElement('a-box');
+        box.setAttribute('position', `${posX} 1.5 ${posZ}`);
+        box.setAttribute('width', '0.5');
+        box.setAttribute('height', '0.3');
+        box.setAttribute('depth', '0.5');
+        box.setAttribute('color', colore);
+        
+        // Al click, ricarica la pagina cambiando il parametro del punto
+        box.addEventListener('click', function () {
+          window.location.href = `index.html?p=${destinazione}`;
+        });
+
+        // Testo sopra il pulsante
+        let testo = document.createElement('a-text');
+        testo.setAttribute('value', direzione);
+        testo.setAttribute('align', 'center');
+        testo.setAttribute('position', '0 0.4 0');
+        testo.setAttribute('scale', '1.5 1.5 1.5');
+        
+        box.appendChild(testo);
+        contenitore.appendChild(box);
+      }
+
+      // 2. GENERAZIONE LOGICA DEGLI HOTSPOT IN BASE A COSA HAI SCATTATO
+
+      // --- MOVIMENTO VERTICALE (Avanti / Indietro) ---
+      // Se non siamo all'ultimo punto del corridoio, metti la freccia AVANTI
+      if ((corridoio === 'A' && passo < 8) || (corridoio === 'B' && passo < 3)) {
+        creaFreccia('Avanti', `${corridoio}${passo + 1}`, 0, -4, '#e65100');
+      }
+      // Se non siamo al primo punto del corridoio, metti la freccia INDIETRO
+      if (passo > 1) {
+        creaFreccia('Indietro', `${corridoio}${passo - 1}`, 0, 4, '#e65100');
+      }
+
+      // --- SPOSTAMENTO LATERALE (Cambio Corridoio tra A e B) ---
+      // Puoi cambiare corridoio solo nei punti in cui esistono sia le foto A che le foto B (cioè i passi 1, 2 e 3)
+      if (passo <= 3) {
+        if (corridoio === 'A') {
+          // Se sei nel corridoio A, puoi svoltare a DESTRA per andare nel B
+          creaFreccia('Svolta a Destra', `B${passo}`, 4, 0, '#2e7d32');
+        } else if (corridoio === 'B') {
+          // Se sei nel corridoio B, puoi svoltare a SINISTRA per tornare in A
+          creaFreccia('Svolta a Sinistra', `A${passo}`, -4, 0, '#2e7d32');
+        }
+      }
+    </script>
+  </body>
+</html>
